@@ -22,18 +22,17 @@ class WebhookController extends Controller
 
         $token = $request->header('token');
 
-        $tokenInfo = $this->modmeService->checkToken($token);
+        $company = Company::query()
+            ->where('modme_token', $token)->first();
 
-        if($tokenInfo && $tokenInfo['data']['company']['id']){
+        if($company){
 
-            $company_id = $tokenInfo['data']['company']['id'];
-            $company_name = $tokenInfo['data']['company']['name'];
+            $tokenInfo = $this->modmeService->checkToken($token);
 
-            $company = Company::query()
-                ->where('modme_company_id', $company_id)
-                ->where('modme_token', $token)->first();
+            if($tokenInfo && $tokenInfo['data']['company']['id']){
 
-            if($company){
+                $company_id = $tokenInfo['data']['company']['id'];
+                $company_name = $tokenInfo['data']['company']['name'];
 
                 $data = $request->validate([
                     'name' => 'required',
@@ -41,7 +40,6 @@ class WebhookController extends Controller
                     'phone' => 'required',
                     'comments' => 'nullable',
                 ]);
-
                 $data['modme_company_id'] = $company_id;
 
                 $leadResponse = $this->modmeService->sendLead($data);
@@ -54,15 +52,10 @@ class WebhookController extends Controller
 
                 return response()->json(['status' => 'success'], 200);
             }else{
-                Company::create([
-                    'name' => $company_name,
-                    'modme_company_id' => $company_id,
-                    'modme_token' => $token
-                ]);
-                return 'Companyga yozildi';
+                return "Token Xato";
             }
         }else{
-            return "Token Xato";
+            return "Forma ma'lumotlari bazaga yozish uchun o'quv markaz ro'yhatdan o'tmagan ";
         }
 
     }
