@@ -11,13 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('webhook_data', function (Blueprint $table) {
+        Schema::create('phone_numbers', function (Blueprint $table) {
             $table->id();
-            $table->string('Name')->nullable();
-            $table->string('email')->nullable();
-            $table->text('comments')->nullable();
-            $table->bigInteger('modme_company_id');
+            $table->unsignedBigInteger('webhook_id'); 
+            $table->string('phone_number');
             $table->timestamps();
+
+            $table->foreign('webhook_id')->references('id')->on('webhook_data')->onDelete('cascade');
         });
     }
 
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('_webhook_data');
+        Schema::dropIfExists('phone_numbers');
     }
 };

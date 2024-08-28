@@ -25,15 +25,27 @@ class CompanyController extends Controller
         $token = $request->input('token');
         $tokenInfo = $this->modmeService->checkToken($token);
 
-        if(!empty($tokenInfo) && $tokenInfo['data']['company']['id']){
+        if(is_array($tokenInfo) && isset($tokenInfo['data']['company']['id'])){
 
             $company_id = $tokenInfo['data']['company']['id'];
 
             $company = Company::query()->where('modme_company_id', $company_id)->where('modme_token', $token)->first();
 
             if($company){
-                $filails = $this->modmeService->checkCompany($token);
-                return "Bazada bor ok ";
+
+                $company_subdomain =  "https://" . $tokenInfo['data']['company']['subdomain'] . '.';
+                $response = $this->modmeService->checkCompany($token, $company_subdomain);
+                $company['token'] = $token;
+
+                if (isset($response['data']) && is_array($response['data'])) {
+                    $branches = $response['data'];
+                    $company['branches'] = $branches;
+                } else {
+                    $company->branches = [];
+                    \Log::error('Invalid branches data or error occurred', ['response' => $response]);
+                }
+
+                return view('index', compact('company'));
             }else{
                 return view('welcome', compact('token', 'company_id'));
             }

@@ -18,4 +18,4 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [CompanyController::class, 'index'])->name('index');
 Route::post('/', [CompanyController::class, "tariffStore"])->name('tariffStore');
 
-Route::any('/webhook', [WebhookController::class, 'create'])->name('create');
+Route::any('/webhook/{branch_id}', [WebhookController::class, 'create'])->name('create');

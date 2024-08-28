@@ -24,11 +24,12 @@ class ModmeService
     {
         try {
             $client = new Client();
+
             $post = $client->post($this->modme_url."/v1/create_lead", [
                 'query' => [
-                    "name" => $data['name'],
-                    "phone" => $data['phone'],
-                    "branch_id" => 147,
+                    "name" => $data['Name'],
+                    "phone" => $data['Phone'],
+                    "branch_id" => $data['branch_id'],
                     "comment" => $data['comments'] ?? null,
                     "section_id" => $data['section_id'] ?? null,
                     "source_id" => $data['source_id'] ?? null,
@@ -62,21 +63,22 @@ class ModmeService
         }
     }
 
-    public function checkCompany($token)
+    public function checkCompany($token, $company_subdomain)
     {
         try {
             $client = new Client();
             $post = $client->get($this->modme_url."/v2/branches", [
                 'headers' => [
                     'Authorization' => 'Bearer ' . $token,
+                    'Referer' =>  $company_subdomain . 'modme.uz',
                     'Content-Type' => 'application/json'
-
                 ]
             ]);
             return json_decode($post->getBody()->getContents(), true);
+
         } catch (GuzzleException $e) {
             Log::error($e->getMessage());
-            abort(500, $e->getMessage());
+            return $e->getMessage();
         }
     }
 }

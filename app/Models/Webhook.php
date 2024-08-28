@@ -12,11 +12,16 @@ class Webhook extends Model
     protected $table = 'webhook_data';
 
     protected $fillable = [
-        'name',
-        'email',
-        'phone',
+        'Name',
+        'Email',
+        'Phone',
         'comments',
         'modme_company_id'
     ];
+
+    public function phoneNumbers()
+    {
+        return $this->hasMany(PhoneNumber::class);
+    }
 
 }

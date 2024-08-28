@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Webhook;
 use App\Models\Company;
+use App\Models\PhoneNumber;
 use App\Service\ModmeService;
 
 class WebhookController extends Controller
@@ -18,9 +19,9 @@ class WebhookController extends Controller
         $this->modmeService = $modmeService;
     }
 
-    public function create(Request $request){
+    public function create(Request $request, $branch_id){
 
-        $token = $request->header('token');
+        $token = $request->token;
 
         $company = Company::query()
             ->where('modme_token', $token)->first();
@@ -29,26 +30,57 @@ class WebhookController extends Controller
 
             $tokenInfo = $this->modmeService->checkToken($token);
 
-            if($tokenInfo && $tokenInfo['data']['company']['id']){
+            if(is_array($tokenInfo) && isset($tokenInfo['data']['company']['id'])){
 
                 $company_id = $tokenInfo['data']['company']['id'];
                 $company_name = $tokenInfo['data']['company']['name'];
 
-                $data = $request->validate([
-                    'name' => 'required',
-                    'email' => 'required|email',
-                    'phone' => 'required',
-                    'comments' => 'nullable',
-                ]);
+                $data = $request->all();
+
+                $baseData = [
+                    'modme_company_id' =>$company_id,
+                ];
+
+                $comments = $data['comments'] ?? '    ';
+                $phoneNumbers = [];
+                $isFirstPhoneNumber = true;
+                $i = 0;
+
+                foreach ($data as $key => $value) {
+                    if (str_starts_with($key, 'Phone')) {
+                        $phoneNumbers[] = $value;
+
+                        if (! $isFirstPhoneNumber) {
+                            $comments .= "  , Phone " . $i .": " . $value . " ";
+                        }
+
+                        $isFirstPhoneNumber = false;
+                        $i++;
+                        unset($data[$key]);
+                    }
+                }
+
+                $data['comments'] = $comments;
+                $webhookData = array_merge($baseData, $data);
+                $webhook = Webhook::create($webhookData);
+
+                foreach ($phoneNumbers as $phoneNumber) {
+                    PhoneNumber::create([
+                        'phone_number' => $phoneNumber,
+                        'webhook_id' => $webhook->id
+                    ]);
+                }
+
                 $data['modme_company_id'] = $company_id;
+                $data['branch_id'] = $branch_id;
+                $data['Phone'] = $request->Phone;
+
 
                 $leadResponse = $this->modmeService->sendLead($data);
 
                 if (!$leadResponse) {
                     return response()->json(['ERROR' => 'Leadga yuborishda muammo!'], 500);
                 }
-
-                Webhook::create($data);
 
                 return response()->json(['status' => 'success'], 200);
             }else{

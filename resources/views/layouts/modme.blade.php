@@ -111,6 +111,34 @@
         });
     </script>
 
+<script>
+    function copyToClipboard(inputId, iconId, notificationId) {
+        var inputElement = document.getElementById(inputId);
+        inputElement.style.display = "block";
+        inputElement.select();
+        inputElement.setSelectionRange(0, 99999);
+        document.execCommand("copy");
+        inputElement.style.display = "none";
+
+        var notification = document.getElementById(notificationId);
+        notification.textContent = "";
+        notification.style.display = "block";
+
+        var copyIcon = document.getElementById(iconId);
+        var originalIcon = copyIcon.innerHTML;
+        copyIcon.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check-circle-fill" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zM6.5 11l-2-2 1-1 1 1 3-3 1 1-4 4z"/>
+            </svg>
+        `;
+
+        setTimeout(function() {
+            notification.style.display = "none";
+            copyIcon.innerHTML = originalIcon;
+        }, 500);
+    }
+</script>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 </body>
 </html>
